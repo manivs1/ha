@@ -1,0 +1,598 @@
+
+
+// ============================================================
+// 1. CREATE NODES
+// Purpose: Insert new nodes into the graph.
+// Syntax: CREATE (:Label {property: value});
+// ============================================================
+
+CREATE (:Student {name: 'Arun', age: 20});
+CREATE (:Student {name: 'Priya', age: 21});
+CREATE (:Course {name: 'Computer Science'});
+
+
+// ============================================================
+// 2. CREATE MULTIPLE NODES IN ONE QUERY
+// ============================================================
+
+CREATE
+  (:Student {name: 'Karthik', age: 22}),
+  (:Student {name: 'Divya', age: 20}),
+  (:Student {name: 'Meena', age: 21});
+
+
+// ============================================================
+// 3. MATCH / READ NODES
+// Purpose: Retrieve nodes.
+// Syntax: MATCH (variable:Label) RETURN variable;
+// ============================================================
+
+// Return all nodes in the database
+MATCH (n)
+RETURN n;
+
+// Return all Student nodes
+MATCH (s:Student)
+RETURN s;
+
+// Return only student names
+MATCH (s:Student)
+RETURN s.name;
+
+// Return multiple properties
+MATCH (s:Student)
+RETURN s.name, s.age;
+
+
+// ============================================================
+// 4. FILTER USING WHERE
+// Purpose: Return records that satisfy a condition.
+// ============================================================
+
+// Syntax: MATCH (n:Label) WHERE condition RETURN n;
+// Find students older than 20
+MATCH (s:Student)
+WHERE s.age > 20
+RETURN s.name, s.age;
+
+// Equal to
+MATCH (s:Student)
+WHERE s.name = 'Arun'
+RETURN s;
+
+// Not equal to
+MATCH (s:Student)
+WHERE s.age <> 20
+RETURN s;
+
+// Less than / less than or equal to
+MATCH (s:Student)
+WHERE s.age < 22
+RETURN s;
+
+// Greater than or equal to
+MATCH (s:Student)
+WHERE s.age >= 21
+RETURN s;
+
+// AND: both conditions must be true
+MATCH (s:Student)
+WHERE s.age > 18 AND s.age < 22
+RETURN s;
+
+// OR: at least one condition must be true
+MATCH (s:Student)
+WHERE s.name = 'Arun' OR s.name = 'Priya'
+RETURN s;
+
+// NOT: condition must be false
+MATCH (s:Student)
+WHERE NOT s.age = 20
+RETURN s;
+
+// Check whether a property exists
+MATCH (s:Student)
+WHERE s.email IS NOT NULL
+RETURN s;
+
+// Check whether a property is missing
+MATCH (s:Student)
+WHERE s.email IS NULL
+RETURN s;
+
+
+// ============================================================
+// 5. MATCH USING PROPERTY MAP
+// Purpose: Match a node by its label and property values.
+// ============================================================
+
+// Syntax: MATCH (n:Label {property: value}) RETURN n;
+MATCH (s:Student {name: 'Arun'})
+RETURN s;
+
+// Match by two properties
+MATCH (s:Student {name: 'Arun', age: 20})
+RETURN s;
+
+
+// ============================================================
+// 6. CREATE RELATIONSHIPS
+// Purpose: Connect existing nodes.
+// Syntax:
+// MATCH (a:Label {property: value}), (b:Label {property: value})
+// CREATE (a)-[:RELATIONSHIP_TYPE]->(b);
+// ============================================================
+
+// Connect Arun to the Computer Science course
+MATCH (s:Student {name: 'Arun'}),
+      (c:Course {name: 'Computer Science'})
+CREATE (s)-[:ENROLLED_IN]->(c);
+
+// Create a friendship relationship
+MATCH (a:Student {name: 'Arun'}),
+      (b:Student {name: 'Priya'})
+CREATE (a)-[:FRIENDS_WITH]->(b);
+
+// Relationship with properties
+MATCH (a:Student {name: 'Arun'}),
+      (b:Student {name: 'Priya'})
+CREATE (a)-[:FRIENDS_WITH {since: 2024}]->(b);
+
+// IMPORTANT: MATCH must find the nodes. If no nodes match,
+// CREATE makes no relationship. Check spelling and property values.
+// Re-running CREATE may create duplicate relationships.
+
+
+// ============================================================
+// 7. MATCH RELATIONSHIPS
+// Purpose: Retrieve connected nodes.
+// ============================================================
+
+// Syntax: MATCH (a)-[:RELATIONSHIP]->(b) RETURN b;
+// Find Arun's outgoing friends
+MATCH (:Student {name: 'Arun'})-[:FRIENDS_WITH]->(f:Student)
+RETURN f.name;
+
+// Find students enrolled in Computer Science
+MATCH (s:Student)-[:ENROLLED_IN]->(c:Course {name: 'Computer Science'})
+RETURN s.name;
+
+// Return both ends of a relationship
+MATCH (s:Student)-[r:ENROLLED_IN]->(c:Course)
+RETURN s.name, type(r), c.name;
+
+// Match relationship regardless of direction
+MATCH (a:Student)-[:FRIENDS_WITH]-(b:Student)
+RETURN a.name, b.name;
+
+
+// ============================================================
+// 8. CREATE OR MATCH USING MERGE
+// Purpose: Match an existing pattern or create it if absent.
+// ============================================================
+
+// Create Arun only if that exact labelled/property pattern is absent
+MERGE (s:Student {name: 'Arun'})
+RETURN s;
+
+// Set a property only when MERGE creates a new node
+MERGE (s:Student {name: 'Ravi'})
+ON CREATE SET s.age = 20
+RETURN s;
+
+// Set a property when the pattern already exists
+MERGE (s:Student {name: 'Arun'})
+ON MATCH SET s.lastSeen = 'today'
+RETURN s;
+
+// MERGE a relationship between matching nodes
+MATCH (a:Student {name: 'Arun'}),
+      (b:Student {name: 'Priya'})
+MERGE (a)-[:FRIENDS_WITH]->(b);
+
+
+// ============================================================
+// 9. UPDATE DATA USING SET
+// Purpose: Add or change node/relationship properties.
+// ============================================================
+
+// Update one property
+MATCH (s:Student {name: 'Arun'})
+SET s.age = 23
+RETURN s;
+
+// Add a new property
+MATCH (s:Student {name: 'Arun'})
+SET s.city = 'Chennai'
+RETURN s;
+
+// Update multiple properties
+MATCH (s:Student {name: 'Priya'})
+SET s.age = 22, s.city = 'Coimbatore'
+RETURN s;
+
+// Add a label
+MATCH (s:Student {name: 'Arun'})
+SET s:Developer
+RETURN s;
+
+// Update a relationship property
+MATCH (:Student {name: 'Arun'})-[r:FRIENDS_WITH]->(:Student {name: 'Priya'})
+SET r.since = 2025
+RETURN r;
+
+
+// ============================================================
+// 10. DELETE DATA
+// Purpose: Remove nodes or relationships.
+// ============================================================
+
+// Delete a relationship only
+MATCH (:Student {name: 'Arun'})-[r:FRIENDS_WITH]->(:Student {name: 'Priya'})
+DELETE r;
+
+// Delete a node only if it has no relationships
+MATCH (s:Student {name: 'Arun'})
+DELETE s;
+
+// Delete a node and all its connected relationships
+MATCH (s:Student {name: 'Arun'})
+DETACH DELETE s;
+
+// Delete nodes matching a condition
+MATCH (s:Student)
+WHERE s.age < 18
+DETACH DELETE s;
+
+// Delete all relationships of a given type
+MATCH ()-[r:FRIENDS_WITH]->()
+DELETE r;
+
+// Delete every node and relationship in the current database
+// DANGEROUS: this removes all graph data.
+MATCH (n)
+DETACH DELETE n;
+
+
+// ============================================================
+// 11. REMOVE PROPERTY OR LABEL
+// Purpose: Remove a property or a label, not the node.
+// ============================================================
+
+// Remove age property
+MATCH (s:Student {name: 'Arun'})
+REMOVE s.age;
+
+// Remove Developer label
+MATCH (s:Student {name: 'Arun'})
+REMOVE s:Developer;
+
+// Alternative for removing a property: set it to null
+MATCH (s:Student {name: 'Arun'})
+SET s.city = null;
+
+
+// ============================================================
+// 12. SORT RESULTS USING ORDER BY
+// ============================================================
+
+// Ascending order (smallest to largest)
+MATCH (s:Student)
+RETURN s.name, s.age
+ORDER BY s.age ASC;
+
+// Descending order (largest to smallest)
+MATCH (s:Student)
+RETURN s.name, s.age
+ORDER BY s.age DESC;
+
+// Sort by more than one property
+MATCH (s:Student)
+RETURN s.name, s.age
+ORDER BY s.age DESC, s.name ASC;
+
+
+// ============================================================
+// 13. LIMIT AND SKIP
+// Purpose: Restrict or skip result rows.
+// ============================================================
+
+// Return only the first 3 results
+MATCH (s:Student)
+RETURN s
+LIMIT 3;
+
+// Skip the first 2 results
+MATCH (s:Student)
+RETURN s
+SKIP 2;
+
+// Pagination example
+MATCH (s:Student)
+RETURN s.name
+ORDER BY s.name
+SKIP 10
+LIMIT 10;
+
+
+// ============================================================
+// 14. DISTINCT
+// Purpose: Remove duplicate result values.
+// ============================================================
+
+MATCH (s:Student)
+RETURN DISTINCT s.city;
+
+// Unique customer names whose orders contain expensive products
+MATCH (c:Customer)-[:PLACED]->(:Order)-[:CONTAINS]->(p:Product)
+WHERE p.price > 1000
+RETURN DISTINCT c.name;
+
+
+// ============================================================
+// 15. AGGREGATION FUNCTIONS
+// Purpose: Calculate count, total, average, minimum, maximum.
+// ============================================================
+
+// Count Student nodes
+MATCH (s:Student)
+RETURN COUNT(s) AS totalStudents;
+
+// Count distinct cities
+MATCH (s:Student)
+RETURN COUNT(DISTINCT s.city) AS totalCities;
+
+// Sum of all product prices
+MATCH (p:Product)
+RETURN SUM(p.price) AS totalPrice;
+
+// Average product price
+MATCH (p:Product)
+RETURN AVG(p.price) AS averagePrice;
+
+// Lowest product price
+MATCH (p:Product)
+RETURN MIN(p.price) AS lowestPrice;
+
+// Highest product price
+MATCH (p:Product)
+RETURN MAX(p.price) AS highestPrice;
+
+
+// ============================================================
+// 16. GROUPING WITH WITH
+// Purpose: Group records and calculate summaries.
+// ============================================================
+
+// Count students in each city
+MATCH (s:Student)
+WITH s.city AS city, COUNT(*) AS studentCount
+RETURN city, studentCount
+ORDER BY studentCount DESC;
+
+// Count orders per customer
+MATCH (c:Customer)-[:PLACED]->(o:Order)
+WITH c, COUNT(o) AS totalOrders
+RETURN c.name, totalOrders;
+
+
+// ============================================================
+// 17. OPTIONAL MATCH
+// Purpose: Keep a result even if a related node is missing.
+// ============================================================
+
+// List every customer, including customers without orders
+MATCH (c:Customer)
+OPTIONAL MATCH (c)-[:PLACED]->(o:Order)
+RETURN c.name, o.orderId;
+
+// OPTIONAL MATCH returns null for unmatched variables.
+
+
+// ============================================================
+// 18. STRING SEARCH AND STRING FUNCTIONS
+// ============================================================
+
+// Names beginning with 'A' (case-sensitive)
+MATCH (s:Student)
+WHERE s.name STARTS WITH 'A'
+RETURN s.name;
+
+// Names ending with 'a'
+MATCH (s:Student)
+WHERE s.name ENDS WITH 'a'
+RETURN s.name;
+
+// Names containing 'ri'
+MATCH (s:Student)
+WHERE s.name CONTAINS 'ri'
+RETURN s.name;
+
+// Convert name to uppercase
+MATCH (s:Student)
+RETURN toUpper(s.name);
+
+// Convert name to lowercase
+MATCH (s:Student)
+RETURN toLower(s.name);
+
+// String length
+MATCH (s:Student)
+RETURN s.name, size(s.name) AS nameLength;
+
+
+// ============================================================
+// 19. IN OPERATOR
+// Purpose: Match any value from a list.
+// ============================================================
+
+MATCH (s:Student)
+WHERE s.name IN ['Arun', 'Priya', 'Karthik']
+RETURN s.name;
+
+
+// ============================================================
+// 20. CASE EXPRESSION
+// Purpose: Return a value based on conditions.
+// ============================================================
+
+MATCH (s:Student)
+RETURN s.name,
+       CASE
+         WHEN s.age >= 21 THEN 'Adult'
+         ELSE 'Young'
+       END AS ageGroup;
+
+
+// ============================================================
+// 21. COUNT RELATED NODES
+// Purpose: Count relationships or connected nodes.
+// ============================================================
+
+// Count orders placed by each customer
+MATCH (c:Customer)-[:PLACED]->(o:Order)
+RETURN c.name, COUNT(o) AS orderCount;
+
+// Find customers with more than one order
+MATCH (c:Customer)-[:PLACED]->(o:Order)
+WITH c, COUNT(o) AS orderCount
+WHERE orderCount > 1
+RETURN c.name, orderCount;
+
+
+// ============================================================
+// 22. FIND RECORDS USING MULTIPLE CONDITIONS
+// ============================================================
+
+// Students aged 20 to 22 inclusive
+MATCH (s:Student)
+WHERE s.age >= 20 AND s.age <= 22
+RETURN s.name, s.age;
+
+// Products priced between 500 and 5000
+MATCH (p:Product)
+WHERE p.price >= 500 AND p.price <= 5000
+RETURN p.name, p.price;
+
+// Customers in Chennai or Coimbatore
+MATCH (c:Customer)
+WHERE c.city IN ['Chennai', 'Coimbatore']
+RETURN c.name, c.city;
+
+
+// ============================================================
+// 23. MULTI-HOP RELATIONSHIP QUERY
+// Purpose: Follow more than one relationship type.
+// ============================================================
+
+// Find products ordered by Arun
+MATCH (c:Customer {name: 'Arun'})-[:PLACED]->(o:Order)
+      -[:CONTAINS]->(p:Product)
+RETURN c.name, o.orderId, p.name;
+
+// Find customers whose orders contain products over 1000
+MATCH (c:Customer)-[:PLACED]->(o:Order)
+      -[:CONTAINS]->(p:Product)
+WHERE p.price > 1000
+RETURN DISTINCT c.name;
+
+
+// ============================================================
+// 24. RELATIONSHIP DIRECTION
+// ============================================================
+
+// Outgoing relationship
+MATCH (a:Student)-[:FRIENDS_WITH]->(b:Student)
+RETURN a.name, b.name;
+
+// Incoming relationship
+MATCH (a:Student)<-[:FRIENDS_WITH]-(b:Student)
+RETURN a.name, b.name;
+
+// Either direction
+MATCH (a:Student)-[:FRIENDS_WITH]-(b:Student)
+RETURN a.name, b.name;
+
+
+// ============================================================
+// 25. CHECK ALL NODES AND RELATIONSHIPS
+// Purpose: Inspect what is currently in the graph.
+// ============================================================
+
+// Return all nodes
+MATCH (n)
+RETURN n;
+
+// Return all relationships
+MATCH (a)-[r]->(b)
+RETURN a, r, b;
+
+// Inspect labels and properties
+MATCH (n)
+RETURN labels(n) AS labels, properties(n) AS properties;
+
+// Show relationship types
+MATCH ()-[r]->()
+RETURN DISTINCT type(r);
+
+
+// ============================================================
+// 26. CONSTRAINTS
+// Purpose: Enforce data integrity. Exact syntax can vary by
+// Neo4j version and database edition.
+// ============================================================
+
+// Require unique student names (modern Neo4j syntax)
+CREATE CONSTRAINT student_name_unique IF NOT EXISTS
+FOR (s:Student)
+REQUIRE s.name IS UNIQUE;
+
+// Require every Student node to have a name
+CREATE CONSTRAINT student_name_required IF NOT EXISTS
+FOR (s:Student)
+REQUIRE s.name IS NOT NULL;
+
+// List constraints
+SHOW CONSTRAINTS;
+
+// Drop a constraint by name
+DROP CONSTRAINT student_name_unique IF EXISTS;
+
+
+// ============================================================
+// 28. COMMON LAB EXAM QUESTION PATTERNS
+// ============================================================
+
+// Create a node
+CREATE (:Student {name: 'Arun', age: 20});
+
+// Read all nodes of a label
+MATCH (s:Student) RETURN s;
+
+// Find by property
+MATCH (s:Student {name: 'Arun'}) RETURN s;
+
+// Filter
+MATCH (s:Student) WHERE s.age > 20 RETURN s.name;
+
+// Update
+MATCH (s:Student {name: 'Arun'}) SET s.age = 21;
+
+// Delete one relationship
+MATCH (:Student {name: 'Arun'})-[r:FRIENDS_WITH]->(:Student {name: 'Priya'})
+DELETE r;
+
+// Delete one node and its relationships
+MATCH (s:Student {name: 'Arun'}) DETACH DELETE s;
+
+// Count
+MATCH (s:Student) RETURN COUNT(s);
+
+// Sort and limit
+MATCH (s:Student) RETURN s.name, s.age ORDER BY s.age DESC LIMIT 2;
+
+// Create a relationship between existing nodes
+MATCH (a:Student {name: 'Arun'}), (b:Student {name: 'Priya'})
+CREATE (a)-[:FRIENDS_WITH]->(b);
+
+
